@@ -1,0 +1,21 @@
+# Veriler
+anaokulu_gorseller.xlsx
+indirilen_gorseller/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Loglar
+*.log
+
+# OS
+Thumbs.db
+.DS_Store

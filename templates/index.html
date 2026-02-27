@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anaokulu Görsel İnceleme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #242836;
+            --border: #2e3345;
+            --text: #e4e6ef;
+            --text2: #8b8fa3;
+            --accent: #6c5ce7;
+            --green: #00b894;
+            --red: #e74c3c;
+            --orange: #f39c12;
+            --radius: 10px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ─── Sol Panel: Okul Listesi ─── */
+        .sidebar {
+            width: 340px;
+            min-width: 340px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent), #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+        }
+
+        .sidebar-stats {
+            padding: 10px 20px;
+            font-size: 12px;
+            color: var(--text2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: var(--surface2);
+            font-weight: 600;
+        }
+
+        .school-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .school-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .school-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .school-item {
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .school-item:hover {
+            background: var(--surface2);
+        }
+
+        .school-item.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .school-item.active .school-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .school-item.downloaded {
+            border-left: 3px solid var(--green);
+        }
+
+        .school-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .school-status.ok {
+            background: var(--green);
+        }
+
+        .school-status.fail {
+            background: var(--red);
+        }
+
+        .school-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .school-domain {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .school-count {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: var(--surface2);
+            border-radius: 10px;
+            color: var(--text2);
+            flex-shrink: 0;
+        }
+
+        /* ─── Sağ Panel: Görseller ─── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .main-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .main-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-approve {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-approve:hover:not(:disabled) {
+            background: #00a884;
+            transform: translateY(-1px);
+        }
+
+        .btn-reject {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .btn-reject:hover:not(:disabled) {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .btn-download {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-download:hover:not(:disabled) {
+            background: #5b4bd5;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text2);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            border-color: var(--text2);
+            color: var(--text);
+        }
+
+        .selection-info {
+            font-size: 12px;
+            color: var(--text2);
+            padding: 0 8px;
+        }
+
+        /* ─── Görsel Grid ─── */
+        .image-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            align-content: start;
+        }
+
+        .image-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .image-grid::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .image-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .image-card:hover {
+            border-color: var(--border);
+            transform: translateY(-2px);
+        }
+
+        .image-card.approved {
+            border-color: var(--green);
+        }
+
+        .image-card.rejected {
+            border-color: var(--red);
+            opacity: 0.45;
+        }
+
+        .image-card .badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 2;
+            text-transform: uppercase;
+        }
+
+        .image-card.approved .badge {
+            background: var(--green);
+            color: #fff;
+            display: block;
+        }
+
+        .image-card.rejected .badge {
+            background: var(--red);
+            color: #fff;
+            display: block;
+        }
+
+        .badge {
+            display: none;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .image-wrapper img:hover {
+            transform: scale(1.05);
+        }
+
+        .image-wrapper .img-error {
+            color: var(--text2);
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .image-card-footer {
+            display: none;
+        }
+
+        /* ─── Overlay Butonları (görsel üzerinde) ─── */
+        .overlay-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 10px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            z-index: 10;
+        }
+
+        .overlay-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #fff;
+            backdrop-filter: blur(4px);
+        }
+
+        .overlay-btn.tick {
+            background: rgba(0, 184, 148, 0.7);
+        }
+
+        .overlay-btn.tick:hover {
+            background: var(--green);
+            transform: scale(1.15);
+            border-color: #fff;
+        }
+
+        .overlay-btn.cross {
+            background: rgba(231, 76, 60, 0.7);
+        }
+
+        .overlay-btn.cross:hover {
+            background: var(--red);
+            transform: scale(1.15);
+            border-color: #fff;
+        }
+
+        .image-card.approved .overlay-btn.tick {
+            background: var(--green);
+            border-color: #fff;
+            box-shadow: 0 0 12px rgba(0, 184, 148, 0.6);
+        }
+
+        .image-card.rejected .overlay-btn.cross {
+            background: var(--red);
+            border-color: #fff;
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
+        }
+
+        .image-card .img-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 2px 8px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #fff;
+            z-index: 2;
+        }
+
+        /* ─── Boş Durum ─── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text2);
+            gap: 12px;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        /* ─── İndirme İlerleme ─── */
+        .progress-bar-container {
+            padding: 12px 24px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+
+        .progress-bar-container.active {
+            display: block;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: var(--text2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--surface2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--green));
+            border-radius: 3px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        /* ─── Modal (Büyük Görsel) ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ─── Filter Tabs ─── */
+        .filter-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .filter-tab {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text2);
+            transition: all 0.2s;
+            border: none;
+            background: none;
+        }
+
+        .filter-tab:hover {
+            color: var(--text);
+            background: var(--surface2);
+        }
+
+        .filter-tab.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* ─── Sayfalama ─── */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .pagination.hidden {
+            display: none;
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface2);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+
+        .page-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: var(--text2);
+        }
+
+        /* ─── Kişi Grup (klasör yapısı) ─── */
+        .person-group {
+            margin-bottom: 4px;
+        }
+
+        .person-header {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .person-header:hover {
+            background: var(--surface2);
+        }
+
+        .person-arrow {
+            font-size: 10px;
+            transition: transform 0.2s;
+            color: var(--text2);
+            width: 14px;
+            text-align: center;
+        }
+
+        .person-group.open .person-arrow {
+            transform: rotate(90deg);
+        }
+
+        .person-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            flex: 1;
+        }
+
+        .person-meta {
+            font-size: 10px;
+            color: var(--text2);
+            padding: 2px 8px;
+            background: var(--surface2);
+            border-radius: 10px;
+        }
+
+        .person-schools {
+            display: none;
+            padding-left: 12px;
+        }
+
+        .person-group.open .person-schools {
+            display: block;
+        }
+
+        /* ─── Hoş Geldiniz Ekranı ─── */
+        .welcome-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 23, 0.95);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-overlay.hidden {
+            display: none;
+        }
+
+        .welcome-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+        }
+
+        .welcome-box h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), #a29bfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-box p {
+            color: var(--text2);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .welcome-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .welcome-btn {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .welcome-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* Kişi bilgi barı */
+        .person-bar {
+            padding: 8px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface2);
+        }
+
+        .person-bar-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .person-bar-change {
+            font-size: 11px;
+            color: var(--text2);
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: none;
+            transition: all 0.15s;
+        }
+
+        .person-bar-change:hover {
+            border-color: var(--text2);
+            color: var(--text);
+        }
+
+        .person-group.other-person .person-header {
+            opacity: 0.5;
+        }
+
+        .person-group.other-person .person-name {
+            color: var(--text2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Hoş Geldiniz Ekranı -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-box">
+            <h2>🏠 Hoş Geldiniz!</h2>
+            <p>Görsel inceleme paneline hoş geldiniz.<br>Lütfen isminizi seçin:</p>
+            <div class="welcome-buttons" id="welcomeButtons"></div>
+        </div>
+    </div>
+
+    <!-- Sol Panel -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🏠 Anaokulu Görselleri</h1>
+            <input type="text" class="search-box" id="searchBox" placeholder="Okul ara...">
+        </div>
+        <div class="person-bar" id="personBar" style="display:none">
+            <span class="person-bar-name" id="personBarName"></span>
+            <button class="person-bar-change" onclick="changePerson()">Değiştir</button>
+        </div>
+        <div class="sidebar-stats" id="sidebarStats"></div>
+        <div class="school-list" id="schoolList">
+            <div class="empty-state">
+                <div class="icon">⏳</div>
+                <div>Yükleniyor...</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sağ Panel -->
+    <div class="main">
+        <div class="main-header">
+            <span class="main-title" id="mainTitle">Bir okul seçin</span>
+            <div class="main-actions" id="mainActions" style="display:none;">
+                <span class="selection-info" id="selectionInfo"></span>
+                <button class="btn btn-approve" onclick="approveAll()">✓ Tümünü Onayla</button>
+                <button class="btn btn-reject" onclick="rejectAll()">✗ Tümünü Reddet</button>
+                <button class="btn btn-outline" onclick="resetAll()">↺ Sıfırla</button>
+                <button class="btn btn-outline" style="border-color:var(--orange);color:var(--orange)"
+                    onclick="skipSchool()">⊘ Görsel Yok</button>
+                <button class="btn btn-download" id="downloadBtn" onclick="downloadApproved()">
+                    ⬇ Onaylıları İndir
+                </button>
+            </div>
+        </div>
+
+        <div class="filter-tabs" id="filterTabs" style="display:none;">
+            <button class="filter-tab active" data-filter="all" onclick="setFilter('all',this)">
+                Tümü <span id="countAll"></span>
+            </button>
+            <button class="filter-tab" data-filter="approved" onclick="setFilter('approved',this)">
+                ✓ Onaylı <span id="countApproved"></span>
+            </button>
+            <button class="filter-tab" data-filter="rejected" onclick="setFilter('rejected',this)">
+                ✗ Reddedilen <span id="countRejected"></span>
+            </button>
+            <button class="filter-tab" data-filter="pending" onclick="setFilter('pending',this)">
+                ◌ Bekleyen <span id="countPending"></span>
+            </button>
+        </div>
+
+        <div class="image-grid" id="imageGrid">
+            <div class="empty-state">
+                <div class="icon">🖼️</div>
+                <div>Sol panelden bir okul seçin</div>
+            </div>
+        </div>
+
+        <div class="pagination hidden" id="pagination"></div>
+
+        <div class="progress-bar-container" id="progressContainer">
+            <div class="progress-info">
+                <span id="progressText">İndiriliyor...</span>
+                <span id="progressCount">0/0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Büyük Görsel Modal -->
+    <div class="modal-overlay" id="modal" onclick="closeModal()">
+        <img id="modalImg" src="">
+    </div>
+
+    <script>
+        // ─── State ───────────────────────────────────────────────────────────────────
+        let schools = [];
+        let currentSchool = null;
+        let imageStates = {};   // { imgUrl: 'approved' | 'rejected' | null }
+        let currentFilter = 'all';
+        let currentPage = 1;
+        const PAGE_SIZE = 24;
+        let completedSchools = new Set();
+        let skippedSchools = new Set();
+        let persons = [];
+        let currentPerson = '';   // Seçili kişi
+        let myPerson = '';        // Bu kullanıcının ismi (localStorage)
+
+        // ─── Kişi Seçimi ─────────────────────────────────────────────────────────
+        function initPersonSelection() {
+            myPerson = localStorage.getItem('my_person') || '';
+            if (myPerson) {
+                currentPerson = myPerson;
+                document.getElementById('welcomeOverlay').classList.add('hidden');
+                showPersonBar();
+                loadSchools();
+            } else {
+                // Hoş geldiniz ekranındaki butonları doldur
+                fetch('/api/persons').then(r => r.json()).then(data => {
+                    persons = data;
+                    const container = document.getElementById('welcomeButtons');
+                    container.innerHTML = data.map(p =>
+                        `<button class="welcome-btn" onclick="selectMyPerson('${p.name}')">${p.name}<br><span style="font-size:12px;opacity:0.6">${p.count} okul / ${p.images} g\u00f6rsel</span></button>`
+                    ).join('');
+                });
+            }
+        }
+
+        function selectMyPerson(name) {
+            myPerson = name;
+            currentPerson = name;
+            localStorage.setItem('my_person', name);
+            document.getElementById('welcomeOverlay').classList.add('hidden');
+            showPersonBar();
+            loadSchools();
+        }
+
+        function changePerson() {
+            localStorage.removeItem('my_person');
+            myPerson = '';
+            currentPerson = '';
+            document.getElementById('welcomeOverlay').classList.remove('hidden');
+            document.getElementById('personBar').style.display = 'none';
+            // Butonları yenile
+            initPersonSelection();
+        }
+
+        function showPersonBar() {
+            const bar = document.getElementById('personBar');
+            bar.style.display = 'flex';
+            document.getElementById('personBarName').textContent = '\ud83d\udc64 ' + myPerson;
+        }
+
+        // ─── localStorage Yardımcıları ──────────────────────────────────────────────────
+        function saveStates() {
+            if (!currentSchool) return;
+            const key = 'review_' + currentSchool.safe_name;
+            localStorage.setItem(key, JSON.stringify(imageStates));
+        }
+
+        function loadStates(safeName, images) {
+            const key = 'review_' + safeName;
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // Sadece mevcut görseller için yükle
+                    images.forEach(url => {
+                        imageStates[url] = parsed[url] || null;
+                    });
+                    return;
+                } catch (e) { }
+            }
+            images.forEach(url => imageStates[url] = null);
+        }
+
+        function loadSkipped() {
+            try {
+                const saved = localStorage.getItem('skipped_schools');
+                if (saved) skippedSchools = new Set(JSON.parse(saved));
+            } catch (e) { }
+        }
+
+        function saveSkipped() {
+            localStorage.setItem('skipped_schools', JSON.stringify([...skippedSchools]));
+        }
+
+        // ─── API Çağrıları ───────────────────────────────────────────────────────────
+
+        async function loadSchools() {
+            const [schoolResp, persResp, compResp] = await Promise.all([
+                fetch('/api/schools'),
+                fetch('/api/persons'),
+                fetch('/api/completed')
+            ]);
+            schools = await schoolResp.json();
+            persons = await persResp.json();
+            const compList = await compResp.json();
+            completedSchools = new Set(compList);
+            loadSkipped();
+            renderSchoolList();
+        }
+
+        async function loadImages(idx) {
+            const resp = await fetch(`/api/school/${idx}/images`);
+            const data = await resp.json();
+            currentSchool = data;
+            imageStates = {};
+            loadStates(data.safe_name, data.images);  // localStorage'dan yükle
+            currentFilter = 'all';
+            currentPage = 1;
+            renderImages();
+            renderPagination();
+
+            document.getElementById('mainTitle').textContent = data.domain;
+            document.getElementById('mainActions').style.display = 'flex';
+            document.getElementById('filterTabs').style.display = 'flex';
+
+            // Aktif okul vurgula
+            document.querySelectorAll('.school-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.querySelector(`.school-item[data-idx="${idx}"]`);
+            if (activeEl) activeEl.classList.add('active');
+        }
+
+        // ─── Render Fonksiyonları ────────────────────────────────────────────────────
+
+        function renderSchoolList() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+
+            // Tüm istatistikler
+            const successCount = schools.filter(s => s.status === 'Başarılı').length;
+            const failCount = schools.length - successCount;
+            const totalImgs = schools.reduce((a, s) => a + s.count, 0);
+            const compCount = schools.filter(s => completedSchools.has(s.safe_name)).length;
+            const noImgCount = schools.filter(s => s.count === 0).length;
+            const skipCount = schools.filter(s => skippedSchools.has(s.safe_name)).length;
+
+            document.getElementById('sidebarStats').innerHTML =
+                `<span class="stat-badge">📁 ${schools.length} okul</span>` +
+                `<span class="stat-badge"> ${totalImgs}</span>` +
+                (compCount > 0 ? `<span class="stat-badge" style="background:var(--green);color:#fff">✓ ${compCount}</span>` : '') +
+                (skipCount > 0 ? `<span class="stat-badge" style="background:var(--orange);color:#fff">⊘ ${skipCount}</span>` : '');
+
+            const list = document.getElementById('schoolList');
+
+            // Kişilere göre grupla
+            let html = '';
+            for (const p of persons) {
+                const isMyGroup = p.name === myPerson;
+                const pSchools = schools.filter(s =>
+                    s.person === p.name &&
+                    !completedSchools.has(s.safe_name) &&
+                    s.count > 0 &&
+                    !skippedSchools.has(s.safe_name) &&
+                    (query === '' || s.domain.toLowerCase().includes(query) || s.url.toLowerCase().includes(query))
+                );
+
+                const pTotal = pSchools.reduce((a, s) => a + s.count, 0);
+                // Kendi grubun varsa açık başlat
+                const isOpen = isMyGroup || currentPerson === p.name;
+
+                html += `
+                <div class="person-group ${isOpen ? 'open' : ''} ${!isMyGroup ? 'other-person' : ''}" data-person="${p.name}">
+                    <div class="person-header" onclick="togglePerson('${p.name}')">
+                        <span class="person-arrow">▶</span>
+                        <span class="person-name">${p.name}</span>
+                        <span class="person-meta">${pSchools.length} okul / ${pTotal} görsel</span>
+                    </div>
+                    <div class="person-schools">
+                        ${pSchools.map(s => `
+                            <div class="school-item ${currentSchool && currentSchool.domain === s.domain ? 'active' : ''}"
+                                 data-idx="${s.idx}" onclick="loadImages(${s.idx}); currentPerson='${p.name}';">
+                                <div class="school-status ${s.status === 'Başarılı' ? 'ok' : 'fail'}"></div>
+                                <div class="school-info">
+                                    <div class="school-domain">${s.domain}</div>
+                                </div>
+                                <span class="school-count">${s.count}</span>
+                            </div>
+                        `).join('')}
+                        ${pSchools.length === 0 ? '<div style="padding:8px 14px;font-size:12px;color:var(--text2)">Tüm okullar tamamlandı</div>' : ''}
+                    </div>
+                </div>`;
+            }
+
+            list.innerHTML = html || '<div class="empty-state"><div>Sonuç bulunamadı</div></div>';
+        }
+
+        function togglePerson(name) {
+            currentPerson = currentPerson === name ? '' : name;
+            renderSchoolList();
+        }
+
+        function getFilteredImages() {
+            if (!currentSchool) return [];
+            return currentSchool.images.filter(url => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'approved') return imageStates[url] === 'approved';
+                if (currentFilter === 'rejected') return imageStates[url] === 'rejected';
+                if (currentFilter === 'pending') return imageStates[url] === null;
+                return true;
+            });
+        }
+
+        function renderImages() {
+            if (!currentSchool) return;
+            updateCounts();
+
+            const grid = document.getElementById('imageGrid');
+            const images = getFilteredImages();
+
+            if (images.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>Bu filtrede görsel yok</div></div>';
+                return;
+            }
+
+            // Sayfalama
+            const totalPages = Math.ceil(images.length / PAGE_SIZE);
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageImages = images.slice(start, start + PAGE_SIZE);
+
+            grid.innerHTML = pageImages.map((url) => {
+                const state = imageStates[url];
+                const stateClass = state === 'approved' ? 'approved' : state === 'rejected' ? 'rejected' : '';
+                const globalIdx = currentSchool.images.indexOf(url) + 1;
+                return `
+            <div class="image-card ${stateClass}" data-url="${encodeURIComponent(url)}">
+                <span class="img-label">foto-${globalIdx}</span>
+                <span class="badge">${state === 'approved' ? 'OLUR' : state === 'rejected' ? 'OLMAZ' : ''}</span>
+                <div class="image-wrapper" onclick="openModal('/api/proxy-image?url=${encodeURIComponent(url)}')">
+                    <img src="/api/proxy-image?url=${encodeURIComponent(url)}"
+                         loading="lazy"
+                         onerror="this.outerHTML='<div class=img-error>Yüklenemedi</div>'" />
+                </div>
+                <div class="overlay-actions">
+                    <div class="overlay-btn tick" onclick="event.stopPropagation(); setState('${encodeURIComponent(url)}','approved')">✓</div>
+                    <div class="overlay-btn cross" onclick="event.stopPropagation(); setState('${encodeURIComponent(url)}','rejected')">✗</div>
+                </div>
+            </div>
+        `;
+            }).join('');
+
+            // Scroll en üste
+            grid.scrollTop = 0;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const pag = document.getElementById('pagination');
+            const images = getFilteredImages();
+            const totalPages = Math.ceil(images.length / PAGE_SIZE);
+
+            if (totalPages <= 1) {
+                pag.classList.add('hidden');
+                return;
+            }
+            pag.classList.remove('hidden');
+
+            let html = `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lt; Önceki</button>`;
+
+            // Sayfa numaraları (max 7 göster)
+            let startP = Math.max(1, currentPage - 3);
+            let endP = Math.min(totalPages, startP + 6);
+            startP = Math.max(1, endP - 6);
+
+            for (let p = startP; p <= endP; p++) {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+            }
+
+            html += `<span class="page-info">${images.length} görsel</span>`;
+            html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Sonraki &gt;</button>`;
+
+            pag.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const images = getFilteredImages();
+            const totalPages = Math.ceil(images.length / PAGE_SIZE);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderImages();
+        }
+
+        // ─── Durum Yönetimi ──────────────────────────────────────────────────────────
+
+        function setState(encodedUrl, state) {
+            const url = decodeURIComponent(encodedUrl);
+            imageStates[url] = imageStates[url] === state ? null : state;  // toggle
+            // Sadece ilgili kartı güncelle (sayfa yeniden çizilmez → hızlı)
+            const card = document.querySelector(`.image-card[data-url="${encodedUrl}"]`);
+            if (card) {
+                card.className = 'image-card ' + (imageStates[url] === 'approved' ? 'approved' : imageStates[url] === 'rejected' ? 'rejected' : '');
+                const badge = card.querySelector('.badge');
+                badge.textContent = imageStates[url] === 'approved' ? 'OLUR' : imageStates[url] === 'rejected' ? 'OLMAZ' : '';
+            }
+            saveStates();
+            updateCounts();
+        }
+
+        function approveAll() {
+            getFilteredImages().forEach(url => imageStates[url] = 'approved');
+            saveStates();
+            renderImages();
+        }
+
+        function rejectAll() {
+            getFilteredImages().forEach(url => imageStates[url] = 'rejected');
+            saveStates();
+            renderImages();
+        }
+
+        function resetAll() {
+            getFilteredImages().forEach(url => imageStates[url] = null);
+            saveStates();
+            renderImages();
+        }
+
+        function skipSchool() {
+            if (!currentSchool) return;
+            skippedSchools.add(currentSchool.safe_name);
+            saveSkipped();
+            // Arayüzü sıfırla
+            currentSchool = null;
+            imageStates = {};
+            document.getElementById('mainTitle').textContent = 'Bir okul seçin';
+            document.getElementById('mainActions').style.display = 'none';
+            document.getElementById('filterTabs').style.display = 'none';
+            document.getElementById('imageGrid').innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><div>Sol panelden bir okul seçin</div></div>';
+            document.getElementById('pagination').classList.add('hidden');
+            renderSchoolList();
+        }
+
+        function updateCounts() {
+            const all = Object.keys(imageStates).length;
+            const approved = Object.values(imageStates).filter(s => s === 'approved').length;
+            const rejected = Object.values(imageStates).filter(s => s === 'rejected').length;
+            const pending = all - approved - rejected;
+
+            document.getElementById('countAll').textContent = `(${all})`;
+            document.getElementById('countApproved').textContent = `(${approved})`;
+            document.getElementById('countRejected').textContent = `(${rejected})`;
+            document.getElementById('countPending').textContent = `(${pending})`;
+            document.getElementById('selectionInfo').textContent = `${approved} onaylı / ${all} toplam`;
+            document.getElementById('downloadBtn').disabled = approved === 0;
+        }
+
+        function setFilter(filter, el) {
+            currentFilter = filter;
+            currentPage = 1;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderImages();
+        }
+
+        // ─── İndirme ─────────────────────────────────────────────────────────────────
+
+        async function downloadApproved() {
+            const approved = Object.entries(imageStates)
+                .filter(([_, s]) => s === 'approved')
+                .map(([url, _]) => url);
+
+            if (approved.length === 0) return;
+
+            const resp = await fetch('/api/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    school_name: currentSchool.safe_name,
+                    images: approved,
+                    person: currentPerson,
+                }),
+            });
+
+            const data = await resp.json();
+            if (resp.ok) {
+                startProgressPolling();
+            } else {
+                alert(data.error || 'Hata olustu');
+            }
+        }
+
+        function startProgressPolling() {
+            const container = document.getElementById('progressContainer');
+            container.classList.add('active');
+
+            const interval = setInterval(async () => {
+                const resp = await fetch('/api/progress');
+                const p = await resp.json();
+
+                const pct = p.total > 0 ? Math.round((p.done / p.total) * 100) : 0;
+                document.getElementById('progressFill').style.width = pct + '%';
+                document.getElementById('progressText').textContent = `${p.school} indiriliyor...`;
+                document.getElementById('progressCount').textContent = `${p.done}/${p.total}` +
+                    (p.errors > 0 ? ` (${p.errors} hata)` : '');
+
+                if (p.finished) {
+                    clearInterval(interval);
+                    document.getElementById('progressText').textContent = `${p.school} — tamamlandı!`;
+                    // Tamamlanan okulu listeye ekle ve sayfadan kaldır
+                    completedSchools.add(p.school);
+                    renderSchoolList();
+                    setTimeout(() => container.classList.remove('active'), 3000);
+                }
+            }, 500);
+        }
+
+        // ─── Modal ───────────────────────────────────────────────────────────────────
+
+        function openModal(src) {
+            event.stopPropagation();
+            document.getElementById('modalImg').src = src;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ─── Arama ───────────────────────────────────────────────────────────────────
+
+        document.getElementById('searchBox').addEventListener('input', renderSchoolList);
+
+        // ─── Başlat ──────────────────────────────────────────────────────────────────
+
+        initPersonSelection();
+    </script>
+
+</body>
+
+</html>
