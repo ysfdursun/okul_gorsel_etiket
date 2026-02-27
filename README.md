@@ -1,0 +1,1 @@
+# okul_gorsel_etiket
