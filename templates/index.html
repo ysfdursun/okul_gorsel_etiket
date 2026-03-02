@@ -274,8 +274,9 @@
             overflow-y: auto;
             padding: 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-auto-rows: max-content;
+            gap: 20px;
             align-content: start;
         }
 
@@ -340,21 +341,23 @@
         }
 
         .image-wrapper {
+            position: relative;
             width: 100%;
-            height: 180px;
-            overflow: hidden;
+            padding-top: 75%;
+            /* 4:3 Aspect Ratio için */
             background: var(--surface2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow: hidden;
             cursor: pointer;
         }
 
         .image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s;
+            transition: transform 0.3s ease;
         }
 
         .image-wrapper img:hover {
